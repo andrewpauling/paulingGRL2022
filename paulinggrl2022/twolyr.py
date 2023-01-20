@@ -4,6 +4,7 @@ import statsmodels.api as sm
 import xarray as xr
 from scipy.integrate import odeint
 from scipy.stats import linregress
+from scipy.optimize import least_squares
 
 
 def new_linregress(x, y):
@@ -71,11 +72,11 @@ class TwoLayerModel:
     def __repr__(self):
         summary = [f"{type(self).__name__}"]
         summary.append("---Parameters---")
-        summary.append(f"F: {self.params['F_ref']}")
-        summary.append(f"lambda: {self.params['lam']}")
-        summary.append(f"T_eq: {self.params['Teq']}")
-        summary.append(f"gamma: {self.params['gamma']}")
-        summary.append(f"epsilon: {self.params['epsilon']}")
+        summary.append(f"F: {self.params['F_ref'].data}")
+        summary.append(f"lambda: {self.params['lam'].data}")
+        summary.append(f"T_eq: {self.params['Teq'].data}")
+        summary.append(f"gamma: {self.params['gamma'].data}")
+        summary.append(f"epsilon: {self.params['epsilon'].data}")
 
         return "\n".join(summary)
 
@@ -86,12 +87,20 @@ class TwoLayerModel:
             T (array like): global-mean, annual-mean surface temperature anomaly
             N (array like): global-mean, annual-mean TOA radiative imbalance
         """
+        
+        if self.verbose:
+            print("--Running Gregory regression")
 
         slope, intcpt = xregress(T, N)
 
         self.params["Teq"] = -intcpt / slope
         self.params["F_ref"] = intcpt
         self.params["lam"] = -slope
+        
+        if self.verbose:
+            print(f"--Teq = {self.params['Teq']}")
+            print(f"--F_ref = {self.params['F_ref']}")
+            print(f"--lam = {self.params['lam']}")
 
     def __compute_prelim_params(self, T):
         """Compute preliminary parameters needed to fit model according to Geoffroy et al. (2013)
@@ -99,10 +108,18 @@ class TwoLayerModel:
         Args:
             T (array like): global-mean, annual-mean surface temperature anomaly
         """
+        
+        if self.verbose:
+            print("--Computing preliminary parameters")
 
         y = np.log(self.params["Teq"] - T)
+        if np.isnan(y).any("year"):
+            y = y.fillna(1e-8)
 
-        slope, intcpt = xregress(self.YRS[30:], y.isel(year=slice(30, None)))
+        if self.lambda_type == "fast":
+            slope, intcpt = xregress(self.YRS[10:20], y.isel(year=slice(10, 20)))
+        else:
+            slope, intcpt = xregress(self.YRS[30:], y.isel(year=slice(30, None)))
 
         self.tau_s = -1 / slope
         self.a_s = np.exp(intcpt - np.log(self.params["Teq"]))
@@ -124,10 +141,18 @@ class TwoLayerModel:
             )
 
         self.tau_f = tmp.mean("x", skipna=True).squeeze()
+        
+        if self.verbose:
+            print(f"--tau_s = {self.tau_s}")
+            print(f"--tau_f = {self.tau_f}")
+            print(f"--a_s = {self.a_s}")
+            print(f"--a_f = {self.a_f}")
 
     def __compute_model_params(self):
         """Compute shallow and deep heat capacities and gamma"""
 
+        if self.verbose:
+            print("--Compute heat capacities and gamma")
         self.params["C"] = self.params["lam"] / (
             self.a_f / self.tau_f + self.a_s / self.tau_s
         )
@@ -141,6 +166,8 @@ class TwoLayerModel:
 
     def __compute_general_params(self):
         """Compiute intermediate parameters needed for subsequent calculations"""
+        if self.verbose:
+            print("--Compute general parameters")
         self.b = (self.params["lam"] + self.params["gamma"]) / self.params[
             "C"
         ] + self.params["gamma"] / self.params["C_0"]
@@ -153,6 +180,8 @@ class TwoLayerModel:
 
     def __compute_mode_params(self):
         """Compute mode parameters according to Geoffroy et al. (2013)"""
+        if self.verbose:
+            print("--Compute mode parameters")
         self.phi_f = (
             self.params["C"]
             / (2 * self.params["gamma"])
@@ -164,17 +193,23 @@ class TwoLayerModel:
             * (self.b_star + np.sqrt(self.delta))
         )
 
-    def __compute_T_0(self):
+    def __compute_T_analytical(self):
         """Analytical solution for deep ocean temperature"""
+        self.T_1 = self.params["Teq"] * (
+            1 
+            - self.a_f*np.exp(-self.YRS / self.tau_f) 
+            - self.a_s*np.exp(-self.YRS / self.tau_s)
+        )
         self.T_0 = self.params["Teq"] * (
             1
             - self.phi_f * self.a_f * np.exp(-self.YRS / self.tau_f)
             - self.phi_s * self.a_s * np.exp(-self.YRS / self.tau_s)
         )
 
-    def __compute_H(self, T):
+    def __compute_H(self):
         """Compute heat uptale by deep ocean"""
-        self.H = self.params["gamma"] * (T - self.T_0)
+        return self.params["gamma"] * (self.T_1 - self.T_0)
+    
 
     def __compute_epsilon(self, T, N):
         """Iteratively fit epsilon with iterative procedure of Geoffroy et al. (2013b)
@@ -184,55 +219,62 @@ class TwoLayerModel:
             N (array like): global-mean, annual-mean TOA radiative imbalance
         """
 
-        self.params["epsilon"] = xr.DataArray(np.zeros((self.ens)),
+        self.params["epsilon"] = xr.DataArray(np.ones((self.ens)),
                                               dims="ensmem",
                                               coords={"ensmem": ("ensmem", T.ensmem.data)})
-        for i in range(10):
-            self.__compute_T_0()
-            self.__compute_H(T)
-            
-            for e in range(self.ens):
-                data = {"T": T.isel(ensmem=e).squeeze().data,
-                        "H": self.H.isel(ensmem=e).squeeze().data,
-                        "N": N.isel(ensmem=e).squeeze().data}
-
-                df = pd.DataFrame(data)
-
-                x = df[["T", "H"]]
-                y = df["N"]
-
-                x = sm.add_constant(x)
-
-                model = sm.OLS(y, x).fit()
-
-                self.params["lam"][e] = -model.params["T"]
-                self.params["epsilon"][e] = -model.params["H"] + 1
-                self.params["F_ref"][e] = model.params["const"]
+        
+        def eps_func(x):
+            return N.squeeze() - x[0] + x[1] * T.squeeze() + (x[2] - 1.) * H.squeeze()
+    
+        for e in range(self.ens):
+            init_guess = [self.params["F_ref"].isel(ensmem=e).data, 
+                          self.params["lam"].isel(ensmem=e).data,
+                          1]
+            for i in range(10):
+                self.__compute_T_analytical()
+                H = self.__compute_H()
+                
+                updated_guess = least_squares(eps_func, x0=init_guess)
+                init_guess[:] = updated_guess.x
+                
+                self.params["F_ref"][e] = init_guess[0]
+                self.params["lam"][e] = init_guess[1]
+                self.params["epsilon"][e] = init_guess[2]
                 self.params["Teq"][e] = self.params["F_ref"][e] / self.params["lam"][e]
+                
+                self.__compute_prelim_params(T)
+                self.__compute_model_params()
+                self.__compute_general_params()
+                self.__compute_mode_params()
+                
+                if self.verbose:
+                    print(f"Iteration {i}: epsilon = {init_guess[2]}, F = {init_guess[0]}, lam = {init_guess[1]}")
 
-            self.__compute_prelim_params(T)
-            self.__compute_model_params()
-            self.__compute_general_params()
-            self.__compute_mode_params()
-
-            if self.verbose:
-                print(f"Iteration {i}: epsilon = {self.params['epsilon']}")
-
-    def fit_params(self, T, N):
+    def fit_params(self, T, N, lambda_type="slow", run_type="abrupt-4xCO2"):
         """Fit the parameters of the two-layer model using the methods of Geoffroy et al. (2013)
 
         Args:
             T (array like): global-mean, annual-mean surface temperature anomaly
             N (array like): global-mean, annual-mean TOA radiative imbalance
+            lambda_type (str): flag for using full 150 years to fit lambda or just first 20
         """
+        
+        if self.verbose:
+            print("Fitting parameters")
+            print(f"--Using {lambda_type} lambda")
         if len(T.shape) > 1:
             self.ens = T["ensmem"].size
         else:
             self.ens = 1
             
         self.YRS = T["year"]
+        self.lambda_type = lambda_type
+        self.run_type = run_type
             
-        self.__gregory_regression(T, N)
+        if self.lambda_type == "fast":
+            self.__gregory_regression(T.isel(year=slice(None, 20)), N.isel(year=slice(None, 20)))
+        else:
+            self.__gregory_regression(T, N)
         self.__compute_prelim_params(T)
         self.__compute_model_params()
         self.__compute_general_params()
@@ -290,6 +332,10 @@ class TwoLayerModel:
             np.array: deep temperature
         """
         
+        if self.verbose:
+            print("--Solving model")
+            print(f"--Forcing type: {type(forcing)}")
+        
         enssize = self.params["C"].ensmem.size
         
         for ens in range(enssize):
@@ -335,6 +381,11 @@ class TwoLayerModel:
             else:
                 init_state = [0, 0]
                 tvec = np.arange(0, 150, 0.1)
+                
+                F = self.params['F_ref'].isel(ensmem=ens)
+                
+                if self.verbose:
+                    print(f"--F = {F}")
 
                 state = odeint(
                     self.__twolayersystem,

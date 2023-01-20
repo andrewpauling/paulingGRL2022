@@ -4,11 +4,12 @@ import os
 from glob import glob
 from shutil import copy
 from datetime import datetime
-from paulinggrl2022.util import DATADIR
 
 import warnings
 
 warnings.filterwarnings("ignore")
+
+DATADIR = "../data/cmip6data"
 
 
 class Model:
