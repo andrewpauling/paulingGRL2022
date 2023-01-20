@@ -7,8 +7,10 @@ paulingGRL2022
 <!-- [![conda-forge](https://img.shields.io/conda/dn/conda-forge/paulinggrl2022?label=conda-forge)](https://anaconda.org/conda-forge/paulinggrl2022) -->[![Documentation Status](https://readthedocs.org/projects/paulinggrl2022/badge/?version=latest)](https://paulinggrl2022.readthedocs.io/en/latest/?badge=latest)
 
 
-Code to reproduce results from Pauling et al. (2022)
+Code to reproduce results from Pauling et al. "The climate response to the Mt Pinatubo eruption does not constrain climate sensitivity"
 
 --------
 
 <p><small>Project based on the <a target="_blank" href="https://github.com/jbusecke/cookiecutter-science-project">cookiecutter science project template</a>.</small></p>
+
+The Jupyter notebooks to reproduce the results of the paper are in the notebooks subdirectory. The data needed for the figures can be obtained from the Zenodo repository <a href=10.5281/zenodo.7553001">here</a>. 
