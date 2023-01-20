@@ -14,3 +14,5 @@ Code to reproduce results from Pauling et al. "The climate response to the Mt Pi
 <p><small>Project based on the <a target="_blank" href="https://github.com/jbusecke/cookiecutter-science-project">cookiecutter science project template</a>.</small></p>
 
 The Jupyter notebooks to reproduce the results of the paper are in the notebooks subdirectory. The data needed for the figures can be obtained from the Zenodo repository [here](https://doi.org/10.5281/zenodo.7553001).
+
+The raw CMIP6 output (not provided) can be obtained from [here](https://esgf-node.llnl.gov/projects/esgf-llnl) and were downloaded using [cmip6_downloader](https://github.com/tloureiro/cmip6_downloader).
