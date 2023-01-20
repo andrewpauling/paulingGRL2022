@@ -91,3 +91,5 @@ target/
 .mypy_cache/
 
 data/*/dask-worker*
+data/processed/*
+notebooks/dask-*
