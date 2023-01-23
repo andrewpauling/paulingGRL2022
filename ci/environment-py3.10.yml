@@ -2,11 +2,24 @@ name: test_env_paulinggrl2022
 channels:
   - conda-forge
 dependencies:
-  - python=3.7
+  - python=3.10
   ############## These will have to be adjusted to your specific project
   - numpy
   - scipy
   - xarray
+  - jupyterlab
+  - dask
+  - netcdf4
+  - pandas
+  - matplotlib
+  - cartopy
+  - cftime
+  - xgcm
+  - dask-labextension
+  - numba
+  - cmocean
+  - statsmodels
+  - nc-time-axis
   ##############
   - pytest
   - pip:
