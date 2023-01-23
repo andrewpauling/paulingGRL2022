@@ -17,4 +17,4 @@ The Jupyter notebooks to reproduce the results of the paper are in the notebooks
 
 The raw CMIP6 output (not provided) can be obtained from [here](https://esgf-node.llnl.gov/projects/esgf-llnl) and were downloaded using [cmip6_downloader](https://github.com/tloureiro/cmip6_downloader).
 
-The ECS values were taken from the [Github repository](https://github.com/mzelinka/cmip56_forcing_feedback_ecs) of Mark Zelinka which was associated with [Zelinka et al., 2020](https://doi.org/10.1029/2019GL085782). The user should clone that repository into a folder called ecsdata inside the data directory.
+The equilibrium climate sensitivity (ECS) values were taken from the [Github repository](https://github.com/mzelinka/cmip56_forcing_feedback_ecs) of Mark Zelinka which was associated with [Zelinka et al., 2020](https://doi.org/10.1029/2019GL085782). The user should clone that repository into a folder called ecsdata inside the data directory.
