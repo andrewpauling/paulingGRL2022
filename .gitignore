@@ -93,3 +93,4 @@ target/
 data/*/dask-worker*
 data/processed/*
 notebooks/dask-*
+*.nc
