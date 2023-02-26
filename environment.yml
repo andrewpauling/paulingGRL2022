@@ -2,6 +2,7 @@ name: paulinggrl2022
 channels:
   - conda-forge
 dependencies:
+  - python=3.10
   # Required for full project functionality (dont remove)
   - pytest
   # Examples (remove and add as needed)
@@ -15,9 +16,7 @@ dependencies:
   - matplotlib
   - cartopy
   - cftime
-  - xgcm
   - dask-labextension
-  - numba
   - cmocean
   - statsmodels
   - nc-time-axis

@@ -92,5 +92,8 @@ target/
 
 data/*/dask-worker*
 data/processed/*
+data/forcingdata/*
+data/ecsdata/*
 notebooks/dask-*
 *.nc
+*.zip
