@@ -1,10 +1,8 @@
 #!/bin/bash
 
-if [ ! -f processed.zip ]; then
-    echo "Getting CMIP6 data from Zenodo"
-    wget https://zenodo.org/record/7553001/files/processed.zip
-else
-    echo "Already downloaded processed CMIP6 data from Zenodo"
+if [ ! -f 'processed.zip' ]; then
+    echo "Downloading processed CMIP6 data from Zenodo"
+    wget 'https://zenodo.org/record/7553001/files/processed.zip'
 fi
 
 if [ ! -d processed ]; then
@@ -32,6 +30,25 @@ if [ ! -d forcingdata ]; then
     cd ../
 else
     echo "Already downloaded Schmidt et al. forcing data"
+fi
+
+if [ ! -d 'obsdata' ]; then
+    echo "Getting observational data"
+    mkdir obsdata
+    cd obsdata
+
+    wget 'https://www.metoffice.gov.uk/hadobs/hadcrut5/data/current/analysis/diagnostics/HadCRUT.5.0.1.0.analysis.summary_series.global.monthly.nc'
+
+    for yr in {1985..1999}; do
+	outfile="ERBE_S10N_WFOV_SF_ERBS_Regional_Edition4.1.36Day_${yr}.nc"
+	wget "https://opendap.larc.nasa.gov/opendap/ERBE/S10N/WFOV_SF_ERBS_Regional_Edition4.1/${yr}/${outfile}"
+	ncks -O --mk_rec_dmn time ${outfile} ${outfile}
+	ncpdq -O -a time,lat,lon ${outfile} ${outfile}
+    done
+
+    ncrcat -d time,0,149 ERBE_S10N_WFOV_SF_ERBS_Regional_Edition4.1.36Day_19* ERBE_S10N_WFOV_SF_ERBS_Regional_Edition4.1.36Day_1985-1999.nc
+
+    cd ../
 fi
 
 echo "All data downloaded"
