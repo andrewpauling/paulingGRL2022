@@ -4,12 +4,23 @@ paulingGRL2022
 [![codecov](https://codecov.io/gh/andrewpauling/paulingGRL2022/branch/main/graph/badge.svg?token=ZMJO2T9246)](https://codecov.io/gh/andrewpauling/paulingGRL2022)
 [![License:BSD-3-Clause](https://img.shields.io/badge/License-BSD%203--Clause-lightgray.svg?style=flt-square)](https://opensource.org/licenses/BSD-3-Clause)
 [![pypi](https://img.shields.io/pypi/v/paulinggrl2022.svg)](https://pypi.org/project/paulinggrl2022)
-<!-- [![conda-forge](https://img.shields.io/conda/dn/conda-forge/paulinggrl2022?label=conda-forge)](https://anaconda.org/conda-forge/paulinggrl2022) -->[![Documentation Status](https://readthedocs.org/projects/paulinggrl2022/badge/?version=latest)](https://paulinggrl2022.readthedocs.io/en/latest/?badge=latest)
-
 
 Code to reproduce results from Pauling et al. "The climate response to the Mt Pinatubo eruption does not constrain climate sensitivity"
 
 --------
+
+#### Instructions
+
+- Clone this repository
+- Install the conda environment by running:
+```
+conda env create -f environment.yml
+conda activate paulinggrl2022
+```
+- Install local code in to the environment by running:
+```
+python setup.py develop
+```
 
 <p><small>Project based on the <a target="_blank" href="https://github.com/jbusecke/cookiecutter-science-project">cookiecutter science project template</a>.</small></p>
 
