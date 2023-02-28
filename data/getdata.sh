@@ -1,8 +1,11 @@
 #!/bin/bash
 
+<<<<<<< HEAD
 if [ ! -f 'processed.zip' ]; then
     echo "Downloading processed CMIP6 data from Zenodo"
     wget 'https://zenodo.org/record/7553001/files/processed.zip'
+else
+    echo "Already downloaded processed CMIP6 data from Zenodo"
 fi
 
 if [ ! -d processed ]; then
