@@ -27,7 +27,7 @@ cd data
 ./getdata.sh
 ```
 
-Running the notebook `wpi_vs_ecs.ipynb`requires a large amount of CMIP6 output. This can be obtained from various CMIP6 data repositories. See instructions within that notebook to get the right data.
+Running the notebook `wpi_vs_ecs.ipynb`requires a large amount of CMIP6 output. This can be obtained from various CMIP6 data repositories. I have serialized out the necessary data to avoid having to download it all.
 
 <p><small>Project based on the <a target="_blank" href="https://github.com/jbusecke/cookiecutter-science-project">cookiecutter science project template</a>.</small></p>
 
