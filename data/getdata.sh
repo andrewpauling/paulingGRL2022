@@ -2,14 +2,14 @@
 
 if [ ! -f 'processed.zip' ]; then
     echo "Downloading processed CMIP6 data from Zenodo"
-    wget 'https://zenodo.org/record/7553001/files/processed.zip'
+    wget 'https://zenodo.org/record/7686736/files/processed_v2.zip'
 else
     echo "Already downloaded processed CMIP6 data from Zenodo"
 fi
 
 if [ ! -d processed ]; then
     echo "Unzipping CMIP6 data"
-    unzip processed.zip
+    unzip processed_v2.zip
 else
     echo "Processed CMIP6 data already unzipped"
 fi
