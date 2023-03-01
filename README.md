@@ -21,6 +21,13 @@ conda activate paulinggrl2022
 ```
 python setup.py develop
 ```
+- Download required model and observational output by running:
+```
+cd data
+./getdata.sh
+```
+
+Runnning the notebook `wpi_vs_ecs.ipynb`requires a large amount of CMIP6 output. This can be obtained from various CMIP6 data repositories. See instructions within that notebook to get the right data.
 
 <p><small>Project based on the <a target="_blank" href="https://github.com/jbusecke/cookiecutter-science-project">cookiecutter science project template</a>.</small></p>
 
